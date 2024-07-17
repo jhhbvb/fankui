@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>意见反馈网站</title>
+    <script>
+        function displayFeedback() {
+            var name = document.getElementById("name").value;
+            var feedback = document.getElementById("feedback").value;
+            var nameRegex = /^[\u4e00-\u9fa5]+$/; // Regular expression to match Chinese characters only
+            if (!name.match(nameRegex)) {
+                alert("姓名只能包含中文，请重新输入！");
+                document.getElementById("name").value = "";
+            } else {
+                var feedbackRegex = /^[\u4e00-\u9fa50-9]+$/; // Regular expression to match Chinese characters, numbers
+                if (!feedback.match(feedbackRegex)) {
+                    alert("反馈意见只能包含中文和数字，请重新输入！");
+                    document.getElementById("feedback").value = "";
+                } else {
+                    var lastSubmissionTime = localStorage.getItem("lastSubmissionTime");
+                    if (lastSubmissionTime && Date.now() - lastSubmissionTime < 259200000) {
+                        // 259200000 milliseconds = 3 days
+                        alert("您已经提交过反馈，请在三天后再次提交！");
+                    } else {
+                        var comment = document.createElement("p");
+                        comment.innerHTML = "<strong>" + name + "：</strong> " + feedback;
+                        document.getElementById("comments").appendChild(comment);
+                        document.getElementById("name").value = "";
+                        document.getElementById("feedback").value = "";
+                        saveToLocalStorage(name, feedback);
+                        localStorage.setItem("lastSubmissionTime", Date.now());
+                    }
+                }
+            }
+        }
+
+        function saveToLocalStorage(name, feedback) {
+            var existingComments = localStorage.getItem("feedbackComments");
+            if (existingComments) {
+                existingComments = JSON.parse(existingComments);
+            } else {
+                existingComments = [];
+            }
+            existingComments.push({name: name, feedback: feedback});
+            localStorage.setItem("feedbackComments", JSON.stringify(existingComments));
+        }
+
+        function loadFromLocalStorage() {
+            var existingComments = localStorage.getItem("feedbackComments");
+            if (existingComments) {
+                existingComments = JSON.parse(existingComments);
+                existingComments.forEach(function(comment) {
+                    var newComment = document.createElement("p");
+                    newComment.innerHTML = "<strong>" + comment.name + "：</strong> " + comment.feedback;
+                    document.getElementById("comments").appendChild(newComment);
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadFromLocalStorage);
+    </script>
+</head>
+<body>
+    <h1>意见反馈网站</h1>
+    <p>我们重视您的反馈！请告诉我们您对我们网站的想法。</p>
+    
+    <form>
+        <label for="name">姓名：</label><br>
+        <input type="text" id="name" name="name"><br>
+
+        <label for="feedback">反馈意见：</label><br>
+        <textarea id="feedback" name="feedback" rows="4" cols="50"></textarea><br>
+
+        <input type="button" value="提交" onclick="displayFeedback()">
+    </form>
+
+    <div id="comments"></div>
+</body>
+</html>
